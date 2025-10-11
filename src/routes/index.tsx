@@ -1,9 +1,15 @@
 import { createBrowserRouter } from 'react-router-dom'
-import { AutoLayout } from '../layouts/AutoLayout'
+import { AuthLayout } from '../layouts/AuthLayout'
+import { MainLayout } from '../layouts/MainLayout'
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <AutoLayout />,
+    element: <MainLayout />,
+    children: [],
+  },
+  {
+    path: '/login',
+    element: <AuthLayout />,
   },
 ])

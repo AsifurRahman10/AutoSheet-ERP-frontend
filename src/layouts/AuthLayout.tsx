@@ -1,4 +1,5 @@
 import {
+  Alert,
   Button,
   Checkbox,
   FormControlLabel,
@@ -8,16 +9,28 @@ import {
 } from '@mui/material'
 import { useState } from 'react'
 import loginImage from '../assets/images/login.jpg'
+import { useAuth } from '../context/AuthContext'
+import { useNavigate } from 'react-router-dom'
 
-export const AutoLayout = () => {
+export const AuthLayout = () => {
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
   const [rememberMe, setRememberMe] = useState<boolean>(false)
   const [showPassword, setShowPassword] = useState<boolean>(false)
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const [error, setError] = useState<string | null>(null)
+  const { signIn, user } = useAuth()
+  const navigate = useNavigate()
+  if (user) {
+    navigate('/')
+  }
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Sign in:', { email, password, rememberMe })
+    setError('')
+    const { data, error } = await signIn(email, password)
+    if (error) return setError(error.message)
+    if (data?.user) {
+      navigate('/')
+    }
   }
   return (
     <div className="flex min-h-screen justify-between">
@@ -29,7 +42,7 @@ export const AutoLayout = () => {
             <h1 className="text-lg font-semibold text-blue-600">AutoSheet</h1>
             <p className="text-sm text-gray-600">ERP System</p>
           </div>
-          <Button
+          {/* <Button
             variant="outlined"
             sx={{
               borderColor: '#e5e7eb',
@@ -44,15 +57,29 @@ export const AutoLayout = () => {
             }}
           >
             Sign Up
-          </Button>
+          </Button> */}
         </div>
 
         {/* Sign In Form */}
         <div className="mx-auto w-full max-w-md">
           <div className="mb-8">
-            <p className="mb-2 text-sm text-gray-600">Welcome back!</p>
-            <h2 className="text-3xl font-bold text-gray-900">Please Sign In</h2>
+            <p className="mb-2 text-gray-700">Welcome back!</p>
+            <h2 className="text-3xl font-bold text-dark-gray">
+              Please Sign In
+            </h2>
           </div>
+          {error && (
+            <Alert
+              severity="error"
+              sx={{
+                mb: 2,
+                borderRadius: '8px',
+                fontSize: '0.9rem',
+              }}
+            >
+              {error}
+            </Alert>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
