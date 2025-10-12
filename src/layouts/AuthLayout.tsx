@@ -11,6 +11,7 @@ import { useState } from 'react'
 import loginImage from '../assets/images/login.jpg'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
+import api from '../lib/axios'
 
 export const AuthLayout = () => {
   const [email, setEmail] = useState<string>('')
@@ -28,6 +29,15 @@ export const AuthLayout = () => {
     setError('')
     const { data, error } = await signIn(email, password)
     if (error) return setError(error.message)
+    const refresh_token = data.session?.refresh_token
+    if (!refresh_token) throw new Error('No refresh token returned')
+    if (data?.session) {
+      await api.post(
+        '/auth/session',
+        { refresh_token },
+        { withCredentials: true }
+      )
+    }
     if (data?.user) {
       navigate('/')
     }
