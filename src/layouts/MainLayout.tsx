@@ -2,6 +2,7 @@ import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { SidebarInset, SidebarProvider } from '../components/ui/sidebar'
 import { AppSidebar } from '../components/AppSidebar'
+import { TopProfile } from '../components/TopProfile'
 
 export const MainLayout = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -28,7 +29,7 @@ export const MainLayout = () => {
     "
       >
         <div className="flex flex-1 flex-col">
-          <h1>Hello</h1>
+          <TopProfile user={user} signOut={signOut} />
         </div>
       </SidebarInset>
     </SidebarProvider>
