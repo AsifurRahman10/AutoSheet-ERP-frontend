@@ -1,6 +1,7 @@
-import { Bell, ChevronDown } from 'lucide-react'
+import { Bell, ChevronDown, UsersRound } from 'lucide-react'
 import { Avatar, AvatarImage } from './ui/avatar'
 import { useState, useRef, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 
 export const TopProfile = ({
   user,
@@ -11,6 +12,7 @@ export const TopProfile = ({
 }) => {
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const { pathname } = useLocation()
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -24,21 +26,42 @@ export const TopProfile = ({
     }
   }, [])
 
+  const getIcon = () => {
+    switch (pathname.includes('manage')) {
+      case true:
+        return <UsersRound className="w-6 h-6 text-blue-600" />
+      default:
+        return null
+    }
+  }
+
   return (
     <div className="px-4 py-6 flex items-center justify-between">
       {/* heading part */}
       <div>
-        <h2 className="text-2xl font-semibold">Welcome, {user.email}</h2>
-        <p className="text-dark-gray">
-          Today is{' '}
-          {new Date().toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })}
-          .
-        </p>
+        {pathname === '/' ? (
+          <>
+            <h2 className="text-2xl font-semibold">Welcome, {user.email}</h2>
+            <p className="text-dark-gray">
+              Today is{' '}
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+              .
+            </p>
+          </>
+        ) : (
+          <h2 className="text-2xl font-semibold flex items-center gap-2">
+            {getIcon()}
+            {(pathname.replace(/\/$/, '').split('/').pop() || '').replace(
+              /^./,
+              (c) => c.toUpperCase()
+            )}
+          </h2>
+        )}
       </div>
 
       {/* profile part */}

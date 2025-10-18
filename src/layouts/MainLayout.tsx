@@ -1,11 +1,10 @@
-import { Navigate } from 'react-router-dom'
+import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { SidebarInset, SidebarProvider } from '../components/ui/sidebar'
 import { AppSidebar } from '../components/AppSidebar'
 import { TopProfile } from '../components/TopProfile'
 
 export const MainLayout = () => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { user, loading, signOut } = useAuth()
 
   if (loading) return <div>Loading...</div>
@@ -30,6 +29,7 @@ export const MainLayout = () => {
       >
         <div className="flex flex-1 flex-col">
           <TopProfile user={user} signOut={signOut} />
+          <Outlet />
         </div>
       </SidebarInset>
     </SidebarProvider>
