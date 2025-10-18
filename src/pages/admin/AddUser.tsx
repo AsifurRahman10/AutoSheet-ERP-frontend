@@ -11,35 +11,43 @@ import {
   SelectValue,
 } from '../../components/ui/select'
 import { z } from 'zod'
-import { useFormAction } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useNavigate } from 'react-router-dom'
 
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().optional(),
   email: z.string().email('Invalid email address'),
   phone: z.string().min(11, 'Phone number must be at least 11 digits'),
-  gender: z.enum(['male', 'female']),
+  gender: z.enum(['male', 'female', 'other']),
   role: z.enum(['admin', 'manager', 'staff']),
   designation: z.enum(['junior', 'senior', 'lead']),
   staffId: z.string().min(1, 'Staff ID is required'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  photo: z.any().optional(),
+  photo: z.instanceof(File).optional(),
 })
 
 type FormData = z.infer<typeof formSchema>
 
 export const AddUser = () => {
+  const navigate = useNavigate()
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     setValue,
-    watch,
-  } = useFormAction<FormData>({
+  } = useForm<FormData>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      gender: undefined,
+      role: undefined,
+      designation: undefined,
+    },
   })
+
   const onSubmit = async (data: FormData) => {
     try {
       console.log('Form data:', data)
@@ -53,6 +61,13 @@ export const AddUser = () => {
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      // Validate file size
+      if (file.size > 2 * 1024 * 1024) {
+        alert('File size must be less than 2MB')
+        return
+      }
+
+      setValue('photo', file)
       const reader = new FileReader()
       reader.onloadend = () => {
         setPhotoPreview(reader.result as string)
@@ -61,23 +76,83 @@ export const AddUser = () => {
     }
   }
 
+  const handleBack = () => {
+    navigate(-1)
+  }
+
+  // Form field configuration for reusability
+  const formFields = [
+    {
+      id: 'firstName',
+      label: 'First name',
+      placeholder: 'Enter first name',
+      type: 'text',
+    },
+    {
+      id: 'lastName',
+      label: 'Last name',
+      placeholder: 'Enter last name',
+      type: 'text',
+    },
+    {
+      id: 'email',
+      label: 'Email address',
+      placeholder: 'Enter email address',
+      type: 'email',
+    },
+    {
+      id: 'phone',
+      label: 'Phone number',
+      placeholder: 'Enter phone number',
+      type: 'text',
+    },
+    { id: 'staffId', label: 'Staff ID', placeholder: 'Staff ID', type: 'text' },
+    {
+      id: 'password',
+      label: 'Password',
+      placeholder: 'Enter password',
+      type: 'password',
+    },
+  ] as const
+
+  const selectOptions = {
+    gender: [
+      { value: 'male', label: 'Male' },
+      { value: 'female', label: 'Female' },
+      { value: 'other', label: 'Other' },
+    ],
+    role: [
+      { value: 'admin', label: 'Admin' },
+      { value: 'manager', label: 'Manager' },
+      { value: 'employee', label: 'Employee' },
+    ],
+    designation: [
+      { value: 'junior', label: 'Junior' },
+      { value: 'senior', label: 'Senior' },
+      { value: 'lead', label: 'Lead' },
+    ],
+  }
+
   return (
     <div>
       <Button
         variant="outline"
         size="icon"
-        className="cursor-pointer bg-transparent border-none shadow-none ml-6 gap-0 hover:bg-transparent hover:border-none hover:shadow-none hover:text-current"
+        onClick={handleBack}
+        className="cursor-pointer bg-transparent border-none shadow-none ml-6 gap-0 hover:bg-transparent"
       >
         <ChevronLeft className="w-10 h-10 text-blue-600" />
         <span className="text-lg">Back</span>
       </Button>
+
       <div className="bg-white mt-8 mx-4 px-5 py-4 my-6 rounded-2xl">
         <h2 className="text-2xl font-semibold">Add new Staff</h2>
+
         <div className="mt-16">
-          <form onSubmit={handleSubmit} className="flex gap-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="flex gap-8">
             {/* Left Side - Photo Upload */}
-            <div className="flex-shrink-0 w-64 border flex flex-col justify-center items-center rounded-md">
-              <div className="bg-muted border rounded-full w-48 h-48 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/80 transition-colors relative overflow-hidden">
+            <div className="flex-shrink-0 w-64 border flex flex-col justify-center items-center rounded-md p-4">
+              <div className="bg-muted border rounded-full w-48 h-48 flex items-center justify-center cursor-pointer hover:bg-muted/80 transition-colors relative overflow-hidden">
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/jpg"
@@ -86,14 +161,14 @@ export const AddUser = () => {
                 />
                 {photoPreview ? (
                   <img
-                    src={photoPreview || '/placeholder.svg'}
-                    alt="Profile"
+                    src={photoPreview}
+                    alt="Profile preview"
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="text-center">
+                  <div className="text-center text-muted-foreground">
                     <svg
-                      className="w-12 h-12 mx-auto mb-2 text-muted-foreground"
+                      className="w-12 h-12 mx-auto mb-2"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -111,9 +186,7 @@ export const AddUser = () => {
                         d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
                       />
                     </svg>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Upload photo
-                    </p>
+                    <p className="text-sm font-medium">Upload photo</p>
                   </div>
                 )}
               </div>
@@ -135,181 +208,62 @@ export const AddUser = () => {
             {/* Right Side - Form Fields */}
             <div className="flex-1">
               <div className="grid grid-cols-2 gap-6">
-                {/* First Name */}
-                <div>
-                  <Label
-                    htmlFor="firstName"
-                    className="text-sm font-medium mb-2 block"
-                  >
-                    First name
-                  </Label>
-                  <Input
-                    id="firstName"
-                    name="firstName"
-                    placeholder="Enter first name"
-                    className="bg-background border-input h-[50px]"
-                  />
-                </div>
-
-                {/* Last Name */}
-                <div>
-                  <Label
-                    htmlFor="lastName"
-                    className="text-sm font-medium mb-2 block"
-                  >
-                    Last name
-                  </Label>
-                  <Input
-                    id="lastName"
-                    name="lastName"
-                    placeholder="Enter last name"
-                    className="bg-background border-input h-[50px]"
-                  />
-                </div>
-
-                {/* Email Address */}
-                <div>
-                  <Label
-                    htmlFor="email"
-                    className="text-sm font-medium mb-2 block"
-                  >
-                    Email address
-                  </Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="Enter email address"
-                    className="bg-background border-input h-[50px]"
-                  />
-                </div>
-
-                <div className="flex gap-2">
-                  {/* Gender */}
-                  <div className="flex-1">
+                {/* Render text inputs dynamically */}
+                {formFields.map((field) => (
+                  <div key={field.id}>
                     <Label
-                      htmlFor="gender"
+                      htmlFor={field.id}
                       className="text-sm font-medium mb-2 block"
                     >
-                      Gender
+                      {field.label}
                     </Label>
-                    <Select
-                      value={formData.gender}
-                      onValueChange={(value) =>
-                        handleSelectChange('gender', value)
-                      }
-                    >
-                      <SelectTrigger className="bg-background border-input w-full h-[50px]">
-                        <SelectValue placeholder="Select gender" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Input
+                      id={field.id}
+                      type={field.type}
+                      placeholder={field.placeholder}
+                      className="bg-background border-input h-[50px]"
+                      {...register(field.id as keyof FormData)}
+                    />
+                    {errors[field.id as keyof FormData] && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors[field.id as keyof FormData]?.message}
+                      </p>
+                    )}
                   </div>
+                ))}
 
-                  {/* Role */}
-                  <div className="flex-1">
-                    <Label
-                      htmlFor="role"
-                      className="text-sm font-medium mb-2 block"
-                    >
-                      Role
-                    </Label>
-                    <Select
-                      value={formData.role}
-                      onValueChange={(value) =>
-                        handleSelectChange('role', value)
-                      }
-                    >
-                      <SelectTrigger className="bg-background border-input w-full h-[50px]">
-                        <SelectValue placeholder="Select role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="staff">Staff</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Designation */}
-                  <div className="flex-1">
-                    <Label
-                      htmlFor="designation"
-                      className="text-sm font-medium mb-2 block"
-                    >
-                      Designation
-                    </Label>
-                    <Select
-                      value={formData.designation}
-                      onValueChange={(value) =>
-                        handleSelectChange('designation', value)
-                      }
-                    >
-                      <SelectTrigger className="bg-background border-input w-full h-[50px]">
-                        <SelectValue placeholder="Select designation" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="junior">Junior</SelectItem>
-                        <SelectItem value="senior">Senior</SelectItem>
-                        <SelectItem value="lead">Lead</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Second Phone Number */}
-                <div>
-                  <Label
-                    htmlFor="secondPhone"
-                    className="text-sm font-medium mb-2 block"
-                  >
-                    Phone number
-                  </Label>
-                  <Input
-                    id="secondPhone"
-                    name="secondPhone"
-                    placeholder="Enter phone number"
-                    value={formData.secondPhone}
-                    onChange={handleInputChange}
-                    className="bg-background border-input h-[50px]"
-                  />
-                </div>
-
-                {/* Staff ID */}
-                <div>
-                  <Label
-                    htmlFor="staffId"
-                    className="text-sm font-medium mb-2 block"
-                  >
-                    Staff ID
-                  </Label>
-                  <Input
-                    id="staffId"
-                    name="staffId"
-                    placeholder="Staff ID"
-                    value={formData.staffId}
-                    onChange={handleInputChange}
-                    className="bg-background border-input h-[50px]"
-                  />
-                </div>
-
-                {/* Official Email */}
-                <div>
-                  <Label className="text-sm font-medium mb-2 block">
-                    Password
-                  </Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    placeholder="Official Email"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className="bg-background border-input h-[50px]"
-                  />
+                {/* Select Fields Row */}
+                <div className="col-span-2 flex gap-4">
+                  {(['gender', 'role', 'designation'] as const).map((field) => (
+                    <div key={field} className="flex-1">
+                      <Label
+                        htmlFor={field}
+                        className="text-sm font-medium mb-2 block"
+                      >
+                        {field.charAt(0).toUpperCase() + field.slice(1)}
+                      </Label>
+                      <Select
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        onValueChange={(value) => setValue(field, value as any)}
+                      >
+                        <SelectTrigger className="bg-background border-input w-full">
+                          <SelectValue placeholder={`Select ${field}`} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {selectOptions[field].map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors[field] && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors[field]?.message}
+                        </p>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -317,9 +271,10 @@ export const AddUser = () => {
               <div className="mt-8">
                 <Button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg h-[50px]"
+                  disabled={isSubmitting}
+                  className="bg-gradient-to-br from-[#13add6] to-[#384295] text-white font-normal py-2 px-4 rounded-md hover:opacity-90 transition-opacity w-1/3"
                 >
-                  Add Staff
+                  {isSubmitting ? 'Adding Staff...' : 'Add Staff'}
                 </Button>
               </div>
             </div>
