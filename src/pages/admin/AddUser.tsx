@@ -14,6 +14,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../../lib/supabaseClient.ts'
 
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -33,6 +34,7 @@ type FormData = z.infer<typeof formSchema>
 export const AddUser = () => {
   const navigate = useNavigate()
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const [fileName, setFileName] = useState('')
 
   const {
     register,
@@ -48,18 +50,11 @@ export const AddUser = () => {
     },
   })
 
-  const onSubmit = async (data: FormData) => {
-    try {
-      console.log('Form data:', data)
-      // Your API call here
-      // await api.addStaff(data)
-    } catch (error) {
-      console.error('Error submitting form:', error)
-    }
-  }
+  const onSubmit = async (data: FormData) => {}
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+
     if (file) {
       // Validate file size
       if (file.size > 2 * 1024 * 1024) {
@@ -73,6 +68,8 @@ export const AddUser = () => {
         setPhotoPreview(reader.result as string)
       }
       reader.readAsDataURL(file)
+      const fileName = file.name.replace(/\s+/g, '-').toLowerCase()
+      setFileName(fileName)
     }
   }
 
