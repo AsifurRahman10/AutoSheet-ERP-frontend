@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { ChevronLeft } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Label } from '../../components/ui/label'
@@ -14,7 +16,9 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../../lib/supabaseClient.ts'
+import api from '../../lib/axios'
+import { useAuth } from '../../context/AuthContext'
+import { toast } from 'sonner'
 
 const formSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -25,7 +29,16 @@ const formSchema = z.object({
   role: z.enum(['admin', 'manager', 'staff']),
   designation: z.enum(['junior', 'senior', 'lead']),
   staffId: z.string().min(1, 'Staff ID is required'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/\d/, 'Password must contain at least one number')
+    .regex(
+      /[!@#$%^&*()_\-+={}[\]|\\:;"'<>,.?/~`]/,
+      'Password must contain at least one special character'
+    ),
   photo: z.instanceof(File).optional(),
 })
 
@@ -33,8 +46,12 @@ type FormData = z.infer<typeof formSchema>
 
 export const AddUser = () => {
   const navigate = useNavigate()
+  const { user, signIn } = useAuth()
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
-  const [fileName, setFileName] = useState('')
+  const [uploadImageData, setUploadImageData] = useState({
+    imageUrl: '',
+    publicKey: '',
+  })
 
   const {
     register,
@@ -50,26 +67,67 @@ export const AddUser = () => {
     },
   })
 
-  const onSubmit = async (data: FormData) => {}
+  const onSubmit = async (data: FormData) => {
+    try {
+      // 1️⃣ Prepare full name and post data
+      const fullName = `${data.firstName} ${data.lastName || ''}`.trim()
+      const { firstName, lastName, ...rest } = data
+
+      const postData = {
+        ...rest,
+        fullName,
+        profilePicture: {
+          url: uploadImageData.imageUrl,
+          public_id: uploadImageData.publicKey,
+        },
+        creator: 'lumyzanero@mailinator.com', // or user?.email if available
+      }
+
+      // 2️⃣ Sign in the user
+      const { data: signInData, error: signInError } = await signIn(
+        data.email,
+        data.password
+      )
+      if (signInError) throw new Error(signInError.message)
+
+      // 3️⃣ Register user via API
+      const response = await api.post('/user/register-user', postData)
+
+      // 4️⃣ Show success toast
+
+      toast.success('Staff added successfully!')
+
+      console.log(response.data)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      // 5️⃣ Show error toast
+      toast.error(err?.message || 'Something went wrong.')
+      console.error(err)
+    }
+  }
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
 
     if (file) {
-      // Validate file size
+      // Validate file size (max 2MB)
       if (file.size > 2 * 1024 * 1024) {
-        alert('File size must be less than 2MB')
+        toast.error('File size exceeds 2MB limit.')
         return
       }
+      try {
+        const formData = new FormData()
+        formData.append('imageUrl', file)
 
-      setValue('photo', file)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string)
+        const { data } = await api.post('/upload', formData)
+        const uploadImage = data.data.imageUrl
+        setPhotoPreview(uploadImage)
+        const publicKey = data.data.publicKey
+        setUploadImageData({ imageUrl: uploadImage, publicKey })
+        toast.success('Image uploaded successfully')
+      } catch (error: any) {
+        toast.error(error?.message || 'Image upload failed.')
       }
-      reader.readAsDataURL(file)
-      const fileName = file.name.replace(/\s+/g, '-').toLowerCase()
-      setFileName(fileName)
     }
   }
 
@@ -101,9 +159,14 @@ export const AddUser = () => {
       id: 'phone',
       label: 'Phone number',
       placeholder: 'Enter phone number',
-      type: 'text',
+      type: 'number',
     },
-    { id: 'staffId', label: 'Staff ID', placeholder: 'Staff ID', type: 'text' },
+    {
+      id: 'staffId',
+      label: 'Staff ID',
+      placeholder: 'Staff ID',
+      type: 'number',
+    },
     {
       id: 'password',
       label: 'Password',
@@ -121,7 +184,7 @@ export const AddUser = () => {
     role: [
       { value: 'admin', label: 'Admin' },
       { value: 'manager', label: 'Manager' },
-      { value: 'employee', label: 'Employee' },
+      { value: 'staff', label: 'Staff' },
     ],
     designation: [
       { value: 'junior', label: 'Junior' },

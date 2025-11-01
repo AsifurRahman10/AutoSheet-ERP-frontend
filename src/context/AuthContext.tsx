@@ -49,10 +49,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       email,
       password,
     })
+    if (data.session?.access_token) {
+      sessionStorage.setItem('access-Token', data.session.access_token)
+    }
     return { data, error }
   }
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
+    sessionStorage.removeItem('access-Token')
     if (error) {
       throw error
     }
