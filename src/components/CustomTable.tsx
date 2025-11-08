@@ -12,9 +12,9 @@ export const CustomTable = ({
       <table className="table-auto w-full">
         <thead className=" sticky top-0">
           <tr>
-            {tableHead.map((head: string) => (
+            {tableHead.map((head: string, idx: number) => (
               <th
-                key={head}
+                key={idx}
                 className="text-left text-neutral-600 font-extrabold text-[12px]"
               >
                 {head}
@@ -26,10 +26,7 @@ export const CustomTable = ({
         <tbody>
           {TableData.map((user: User, idx: number) => {
             return (
-              <tr
-                key={user.id}
-                className=" hover:bg-gray-100 transition border-b"
-              >
+              <tr key={idx} className=" hover:bg-gray-100 transition border-b">
                 <td className="text-neutral-600">
                   {String(idx + 1).padStart(2, '0')}
                 </td>
