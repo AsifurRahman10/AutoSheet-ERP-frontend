@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../components/ui/select'
-import { z } from 'zod'
+import { set, z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
@@ -46,7 +46,7 @@ type FormData = z.infer<typeof formSchema>
 
 export const AddUser = () => {
   const navigate = useNavigate()
-  const { user, signIn } = useAuth()
+  const { user, signUp } = useAuth()
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [uploadImageData, setUploadImageData] = useState({
     imageUrl: '',
@@ -58,6 +58,7 @@ export const AddUser = () => {
     handleSubmit,
     formState: { errors, isSubmitting },
     setValue,
+    reset,
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -72,32 +73,33 @@ export const AddUser = () => {
       // 1️⃣ Prepare full name and post data
       const fullName = `${data.firstName} ${data.lastName || ''}`.trim()
       const { firstName, lastName, ...rest } = data
-
+      if (!uploadImageData.imageUrl)
+        return toast.error('Please upload a profile picture.')
       const postData = {
         ...rest,
-        fullName,
+        name: fullName,
         profilePicture: {
           url: uploadImageData.imageUrl,
           public_id: uploadImageData.publicKey,
         },
-        creator: 'lumyzanero@mailinator.com', // or user?.email if available
+        creator: user?.email, // or user?.email if available
       }
 
       // 2️⃣ Sign in the user
-      const { data: signInData, error: signInError } = await signIn(
+      const { data: signInData, error: signInError } = await signUp(
         data.email,
         data.password
       )
       if (signInError) throw new Error(signInError.message)
-
       // 3️⃣ Register user via API
-      const response = await api.post('/user/register-user', postData)
+      await api.post('/user/register-user', postData)
 
       // 4️⃣ Show success toast
 
       toast.success('Staff added successfully!')
-
-      console.log(response.data)
+      reset()
+      setPhotoPreview(null)
+      setUploadImageData({ imageUrl: '', publicKey: '' })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       // 5️⃣ Show error toast

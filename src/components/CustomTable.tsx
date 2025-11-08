@@ -1,0 +1,54 @@
+import { Button } from './ui/button'
+
+export const CustomTable = ({
+  tableHead,
+  TableData,
+}: {
+  tableHead: string[]
+  TableData: User[]
+}) => {
+  return (
+    <div className="overflow-x-auto">
+      <table className="table-auto w-full">
+        <thead className=" sticky top-0">
+          <tr>
+            {tableHead.map((head: string) => (
+              <th
+                key={head}
+                className="text-left text-neutral-600 font-extrabold text-[12px]"
+              >
+                {head}
+              </th>
+            ))}
+          </tr>
+          <tr className="h-2"></tr>
+        </thead>
+        <tbody>
+          {TableData.map((user: User, idx: number) => {
+            return (
+              <tr
+                key={user.id}
+                className=" hover:bg-gray-100 transition border-b"
+              >
+                <td className="text-neutral-600">
+                  {String(idx + 1).padStart(2, '0')}
+                </td>
+                <td className="text-neutral-600">{user.name}</td>
+                <td className="text-neutral-600">{user.gender}</td>
+                <td className="text-neutral-600">{user.staffId}</td>
+                <td className="text-neutral-600">{user.phoneNumber}</td>
+                <td className="text-neutral-600">{user.role}</td>
+                <td className="text-neutral-600">{user.designation}</td>
+                <td className="pr-4 py-2">
+                  <Button variant="link" className="text-blue-500 p-0">
+                    View more
+                  </Button>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}

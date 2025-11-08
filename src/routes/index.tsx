@@ -1,8 +1,8 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { AuthLayout } from '../layouts/AuthLayout'
 import { MainLayout } from '../layouts/MainLayout'
-import { ManagerUser } from '../pages/admin/ManagerUser'
-import { AddUser } from '../pages/admin/AddUser'
+import { ManagerUser } from '../pages/User/ManagerUser'
+import { AddUser } from '../pages/User/AddUser'
 
 export const router = createBrowserRouter([
   {
