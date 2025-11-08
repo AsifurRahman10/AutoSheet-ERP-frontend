@@ -52,6 +52,7 @@ export const AddUser = () => {
     imageUrl: '',
     publicKey: '',
   })
+  const [imageUploading, setImageUploading] = useState(false)
 
   const {
     register,
@@ -109,6 +110,7 @@ export const AddUser = () => {
   }
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setImageUploading(true)
     const file = e.target.files?.[0]
 
     if (file) {
@@ -126,6 +128,7 @@ export const AddUser = () => {
         setPhotoPreview(uploadImage)
         const publicKey = data.data.publicKey
         setUploadImageData({ imageUrl: uploadImage, publicKey })
+        setImageUploading(false)
         toast.success('Image uploaded successfully')
       } catch (error: any) {
         toast.error(error?.message || 'Image upload failed.')
@@ -225,12 +228,18 @@ export const AddUser = () => {
                   <img
                     src={photoPreview}
                     alt="Profile preview"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover rounded-md"
                   />
+                ) : imageUploading ? (
+                  <div className="flex-col gap-4 w-full flex items-center justify-center">
+                    <div className="w-20 h-20 border-4 border-transparent text-blue-400 text-4xl animate-spin flex items-center justify-center border-t-blue-400 rounded-full">
+                      <div className="w-16 h-16 border-4 border-transparent text-red-400 text-2xl animate-spin flex items-center justify-center border-t-red-400 rounded-full"></div>
+                    </div>
+                  </div>
                 ) : (
-                  <div className="text-center text-muted-foreground">
+                  <div className="text-center text-muted-foreground flex flex-col items-center justify-center h-full">
                     <svg
-                      className="w-12 h-12 mx-auto mb-2"
+                      className="w-12 h-12 mb-2"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"

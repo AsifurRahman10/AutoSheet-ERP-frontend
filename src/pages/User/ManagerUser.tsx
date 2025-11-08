@@ -14,6 +14,7 @@ import api from '../../lib/axios'
 import { useAuth } from '../../context/AuthContext'
 import { CustomTable } from '../../components/CustomTable'
 import { useEffect, useState } from 'react'
+import { TableSkeleton } from '../../components/skeleton/TableSkeleton'
 
 export const ManagerUser = () => {
   const navigate = useNavigate()
@@ -62,7 +63,7 @@ export const ManagerUser = () => {
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value)
   }
-  if (isLoading && isFetching) return <div>Loading...</div>
+  // if (isLoading && isFetching) return <div>Loading...</div>
   return (
     <div className="mx-4">
       {/* quick staff search  */}
@@ -120,7 +121,14 @@ export const ManagerUser = () => {
             page
           </p>
         </div>
-        <CustomTable tableHead={tableHead} TableData={allUserData?.data.data} />
+        {isLoading && isFetching ? (
+          <TableSkeleton rows={10} />
+        ) : (
+          <CustomTable
+            tableHead={tableHead}
+            TableData={allUserData?.data.data}
+          />
+        )}
       </div>
       {/* pagination */}
       <div className="mt-5 space-x-4 ml-6">
