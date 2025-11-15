@@ -18,8 +18,8 @@ export const router = createBrowserRouter([
         element: <AddUser />,
       },
       {
-        path: '/edit-user',
-        element: <div>Add User Form</div>,
+        path: '/edit-user/:id',
+        element: <AddUser />,
       },
     ],
   },

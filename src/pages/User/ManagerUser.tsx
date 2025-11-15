@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query'
 import api from '../../lib/axios'
 import { useAuth } from '../../context/AuthContext'
 import { CustomTable } from '../../components/CustomTable'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { TableSkeleton } from '../../components/skeleton/TableSkeleton'
 
 export const ManagerUser = () => {
@@ -37,11 +37,14 @@ export const ManagerUser = () => {
     },
     enabled: !!user?.email,
     refetchOnWindowFocus: false,
+    placeholderData: (prev) => prev,
   })
-  const pagesArray = Array.from(
-    { length: allUserData?.data?.totalPages ?? 0 },
-    (_, i) => i + 1
-  )
+  const pagesArray = useMemo(() => {
+    return Array.from(
+      { length: allUserData?.data?.totalPages ?? 0 },
+      (_, i) => i + 1
+    )
+  }, [allUserData?.data?.totalPages])
   const tableHead = [
     'S/N',
     'Name',
@@ -63,7 +66,9 @@ export const ManagerUser = () => {
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value)
   }
-  // if (isLoading && isFetching) return <div>Loading...</div>
+  const handleViewMore = (userId: string) => {
+    navigate(`/edit-user/${userId}`)
+  }
   return (
     <div className="mx-4">
       {/* quick staff search  */}
@@ -127,6 +132,7 @@ export const ManagerUser = () => {
           <CustomTable
             tableHead={tableHead}
             TableData={allUserData?.data.data}
+            onViewMore={handleViewMore}
           />
         )}
       </div>
@@ -134,13 +140,14 @@ export const ManagerUser = () => {
       <div className="mt-5 space-x-4 ml-6">
         {pagesArray.map((pageNum) => (
           <button
+            disabled={isFetching}
             onClick={() => setSelectedPage(pageNum)}
             key={pageNum}
-            className={`px-4 py-2 border rounded-md  ${
+            className={`px-4 py-2 border rounded-md transition ${
               selectedPage === pageNum
-                ? 'bg-gradient-to-br from-[#13add6] to-[#384295] text-white font-normal py-2 px-4 rounded-md hover:opacity-90 transition-opacity'
-                : 'border-gray-700'
-            }`}
+                ? 'bg-gradient-to-br from-[#13add6] to-[#384295] text-white'
+                : 'border-gray-700 hover:bg-gray-100'
+            } ${isFetching ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {pageNum}
           </button>

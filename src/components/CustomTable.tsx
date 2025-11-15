@@ -3,9 +3,11 @@ import { Button } from './ui/button'
 export const CustomTable = ({
   tableHead,
   TableData,
+  onViewMore,
 }: {
   tableHead: string[]
   TableData: User[]
+  onViewMore: (userId: string) => void
 }) => {
   return (
     <div className="overflow-x-auto">
@@ -24,7 +26,7 @@ export const CustomTable = ({
           <tr className="h-2"></tr>
         </thead>
         <tbody>
-          {TableData.map((user: User, idx: number) => {
+          {TableData?.map((user: User, idx: number) => {
             return (
               <tr key={idx} className=" hover:bg-gray-100 transition border-b">
                 <td className="text-neutral-600">
@@ -37,7 +39,11 @@ export const CustomTable = ({
                 <td className="text-neutral-600">{user.role}</td>
                 <td className="text-neutral-600">{user.designation}</td>
                 <td className="pr-4 py-2">
-                  <Button variant="link" className="text-blue-500 p-0">
+                  <Button
+                    onClick={() => onViewMore(user?._id ?? '')}
+                    variant="link"
+                    className="text-blue-500 p-0"
+                  >
                     View more
                   </Button>
                 </td>

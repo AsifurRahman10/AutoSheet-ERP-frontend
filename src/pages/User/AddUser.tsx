@@ -15,7 +15,7 @@ import {
 import { set, z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate } from 'react-router-dom'
+import { data, useLocation, useNavigate, useParams } from 'react-router-dom'
 import api from '../../lib/axios'
 import { useAuth } from '../../context/AuthContext'
 import { toast } from 'sonner'
@@ -46,6 +46,7 @@ type FormData = z.infer<typeof formSchema>
 
 export const AddUser = () => {
   const navigate = useNavigate()
+  const { id } = useParams()
   const { user, signUp } = useAuth()
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [uploadImageData, setUploadImageData] = useState({
@@ -294,6 +295,13 @@ export const AddUser = () => {
                       placeholder={field.placeholder}
                       className="bg-background border-input h-[50px]"
                       {...register(field.id as keyof FormData)}
+                      autoComplete={
+                        field.id === 'email'
+                          ? 'username'
+                          : field.id === 'password'
+                          ? 'new-password' // or 'current-password' for edit mode
+                          : undefined
+                      }
                     />
                     {errors[field.id as keyof FormData] && (
                       <p className="text-red-500 text-sm mt-1">
